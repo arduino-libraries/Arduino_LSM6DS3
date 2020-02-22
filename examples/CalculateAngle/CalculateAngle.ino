@@ -13,8 +13,6 @@ void setup() {
     while (1);
   }
 
-  for (uint8_t i = 0; i < 200; i++);
-
   for (uint8_t count = 0; count < 200; count++) {
     if (IMU.gyroscopeAvailable())
       IMU.readGyroscope(x, y, z);
