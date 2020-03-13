@@ -1,0 +1,30 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:47:09 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Sun Mar  8 00:13:00 2020
+# Process ID: 29829
+# Current directory: /home/tanmay/tanmay/Arduino_LSM6DS3
+# Command line: vivado
+# Log file: /home/tanmay/tanmay/Arduino_LSM6DS3/vivado.log
+# Journal file: /home/tanmay/tanmay/Arduino_LSM6DS3/vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project /home/tanmay/processor/processor.xpr
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/tools/Xilinx/Vivado/2019.1/data/ip'.
+open_project: Time (s): cpu = 00:00:19 ; elapsed = 00:00:06 . Memory (MB): peak = 6547.570 ; gain = 160.758 ; free physical = 6884 ; free virtual = 26491
+update_compile_order -fileset sources_1
+set_property top alu32 [current_fileset]
+update_compile_order -fileset sources_1
+reset_run synth_1
+launch_runs synth_1 -jobs 4
+[Sun Mar  8 00:44:48 2020] Launched synth_1...
+Run output will be captured here: /home/tanmay/processor/processor.runs/synth_1/runme.log
+set_property top processor [current_fileset]
+update_compile_order -fileset sources_1
+exit
+INFO: [Common 17-206] Exiting Vivado at Sun Mar  8 02:19:44 2020...
