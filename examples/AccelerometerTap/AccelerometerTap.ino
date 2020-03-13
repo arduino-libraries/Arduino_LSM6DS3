@@ -3,7 +3,7 @@
 
   this code is to detect tap
 
-  usign IMU.accelerationAvailable()
+  using IMU.accelerationAvailable()
 
   Made by
   tanmay khabia
@@ -29,6 +29,8 @@ void setup() {
 
 float tapThreshold  = 0.05 ; //0.05g acceleration in some direction is considered as tap. it can be change for the required sensitivity.
 
+int down = 3 ; // signifing the direction of which is facing downward 1 for x axis ; 2 for y axis ; 3 for z axis;
+
 void loop() {
 
   float x, y, z;
@@ -37,15 +39,15 @@ void loop() {
 
     IMU.readAcceleration(x, y, z);
 
-    if (x > tapThreshold || x < -tapThreshold) {
+    if ((x > tapThreshold || x < -tapThreshold) && down != 1 )  {
 
       Serial.println("Tap detected across X-axis");
     }
-    if (y > tapThreshold || y < -tapThreshold) {
+    if ((y > tapThreshold || y < -tapThreshold) && down != 2 )   {
 
       Serial.println("Tap detected across Y-axis");
     }
-    if (z > tapThreshold || z < -tapThreshold) {
+    if ((z > tapThreshold || z < -tapThreshold)&& down != 3 )   {
 
       Serial.println("Tap detected across Z-axis");
     }
