@@ -5,9 +5,6 @@
 
   using IMU.accelerationAvailable()
 
-  Made by
-  tanmay khabia
-
 */
 
 #include <Arduino_LSM6DS3.h>
