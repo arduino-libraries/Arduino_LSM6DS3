@@ -31,6 +31,8 @@
 #define LSM6DS3_CTRL7_G            0X16
 #define LSM6DS3_CTRL8_XL           0X17
 
+#define LSM6DS3_OUT_TEMP_L 			   0X20
+
 #define LSM6DS3_OUTX_L_G           0X22
 #define LSM6DS3_OUTX_H_G           0X23
 #define LSM6DS3_OUTY_L_G           0X24
@@ -176,14 +178,43 @@ float LSM6DS3Class::gyroscopeSampleRate()
   return 104.0F;
 }
 
+int LSM6DS3Class::readTemp(float& t)
+{
+  int16_t data[1];
+
+  if (!readRegisters(LSM6DS3_OUT_TEMP_L, (uint8_t*)data, sizeof(data))) {
+    t = NAN;
+
+    return 0;
+  }
+
+  t = data[0] / 16 + 25;
+
+  return 1;
+}
+
+int LSM6DS3Class::tempAvailable()
+{
+  if (readRegister(LSM6DS3_STATUS_REG) & 0x04) {
+    return 1;
+  }
+
+  return 0;
+}
+
+float LSM6DS3Class::tempSampleRate()
+{
+  return 52.0F;
+}
+
 int LSM6DS3Class::readRegister(uint8_t address)
 {
   uint8_t value;
-  
+
   if (readRegisters(address, &value, sizeof(value)) != 1) {
     return -1;
   }
-  
+
   return value;
 }
 

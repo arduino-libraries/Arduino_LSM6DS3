@@ -39,7 +39,12 @@ class LSM6DS3Class {
     // Gyroscope
     virtual int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.
     virtual float gyroscopeSampleRate(); // Sampling rate of the sensor.
-    virtual int gyroscopeAvailable(); // Check for available data from gyroscopeAvailable
+    virtual int gyroscopeAvailable(); // Check for available data from gyroscope
+
+    // Temperature Sensor
+    virtual int readTemp(float& t); // Results are in deg. C
+    virtual float tempSampleRate(); // Sampling rate of the sensor.
+    virtual int tempAvailable(); // Check for available data from temperature sensor
 
 
   private:
