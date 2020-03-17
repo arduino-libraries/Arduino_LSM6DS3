@@ -27,7 +27,7 @@ void setup() {
   }
 
   Serial.print("Temperature sensor sample rate = ");
-  Serial.print(IMU.tempSampleRate());
+  Serial.print(IMU.temperatureSampleRate());
   Serial.println(" Hz");
   Serial.println();
   Serial.println("Temperature reading in degrees C");
@@ -37,8 +37,8 @@ void setup() {
 void loop() {
   float t;
 
-  if (IMU.tempAvailable()) {
-    IMU.readTemp(t);
+  if (IMU.temperatureAvailable()) {
+    IMU.readTemperature(t);
 
     Serial.println(t);
   }

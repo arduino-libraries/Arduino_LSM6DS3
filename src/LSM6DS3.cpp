@@ -178,7 +178,7 @@ float LSM6DS3Class::gyroscopeSampleRate()
   return 104.0F;
 }
 
-int LSM6DS3Class::readTemp(float& t)
+int LSM6DS3Class::readTemperature(float& t)
 {
   int16_t data[1];
 
@@ -193,7 +193,7 @@ int LSM6DS3Class::readTemp(float& t)
   return 1;
 }
 
-int LSM6DS3Class::tempAvailable()
+int LSM6DS3Class::temperatureAvailable()
 {
   if (readRegister(LSM6DS3_STATUS_REG) & 0x04) {
     return 1;
@@ -202,7 +202,7 @@ int LSM6DS3Class::tempAvailable()
   return 0;
 }
 
-float LSM6DS3Class::tempSampleRate()
+float LSM6DS3Class::temperatureSampleRate()
 {
   return 52.0F;
 }
