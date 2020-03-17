@@ -31,7 +31,7 @@
 #define LSM6DS3_CTRL7_G            0X16
 #define LSM6DS3_CTRL8_XL           0X17
 
-#define LSM6DS3_OUT_TEMP_L 			   0X20
+#define LSM6DS3_OUT_TEMP_L         0X20
 
 #define LSM6DS3_OUTX_L_G           0X22
 #define LSM6DS3_OUTX_H_G           0X23

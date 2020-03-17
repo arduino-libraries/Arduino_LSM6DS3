@@ -30,7 +30,7 @@ void setup() {
   Serial.print(IMU.tempSampleRate());
   Serial.println(" Hz");
   Serial.println();
-  Serial.println("Temperature sensor in degrees C");
+  Serial.println("Temperature reading in degrees C");
   Serial.println("T");
 }
 
