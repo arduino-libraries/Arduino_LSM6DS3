@@ -188,7 +188,7 @@ int LSM6DS3Class::readTemperature(float& t)
     return 0;
   }
 
-  t = data[0] / 16 + 25;
+  t = data[0] / 16.0 + 25;
 
   return 1;
 }
