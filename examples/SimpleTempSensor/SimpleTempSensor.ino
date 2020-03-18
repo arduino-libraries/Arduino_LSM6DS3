@@ -38,6 +38,7 @@ void loop() {
   float t;
 
   if (IMU.temperatureAvailable()) {
+    // after IMU.readTemperature() returns, t will contain the temperature reading
     IMU.readTemperature(t);
 
     Serial.println(t);
