@@ -8,34 +8,42 @@
 
 #include <Arduino_LSM6DS3.h>
 
+float tapThreshold  ;
+float xi, yi , zi ; 
+
 void setup() {
+  
   Serial.begin(9600);
 
   while (!Serial);
-
+  
   while (!IMU.begin()) {
     Serial.println("Failed to initialize IMU!");
     delay(3000); // wait for 3 sec and check if it can be initialized again
   }
+  
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(xi, yi, zi); // initial values of acceleration including gravity or some zero error.
+  }
+  
+  tapThreshold  = 0.05; //0.05 g acceleration in some direction is considered as tap. it can be changed for the required sensitivity.
 }
-float tapThreshold  = 0.05; //0.05 g acceleration in some direction is considered as tap. it can be changed for the required sensitivity.
-
-int down = 3; // signifying the direction of which is facing downward 1 for x axis; 2 for y axis; 3 for z axis;
 
 void loop() {
   float x, y, z;
   if (IMU.accelerationAvailable()) {
     IMU.readAcceleration(x, y, z);
-
-    if ((x > tapThreshold || x < -tapThreshold) && down != 1)  {
+    
+    // workes on difference from initial acceleration to the current acceleration
+    if (x -xi > tapThreshold || x-xi < -tapThreshold){
       Serial.println("Tap detected across X-axis");
     }
 
-    if ((y > tapThreshold || y < -tapThreshold) && down != 2)   {
+    if (y-yi > tapThreshold || y-yi < -tapThreshold){
       Serial.println("Tap detected across Y-axis");
     }
 
-    if ((z > tapThreshold || z < -tapThreshold) && down != 3)   {
+    if (z-zi > tapThreshold || z-zi < -tapThreshold)   {
       Serial.println("Tap detected across Z-axis");
     }
   }
