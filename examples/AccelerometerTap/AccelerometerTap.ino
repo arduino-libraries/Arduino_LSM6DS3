@@ -23,7 +23,7 @@ void setup() {
   }
   
   if (IMU.accelerationAvailable()) {
-    IMU.readAcceleration(xi, yi, zi); // initial values of acceleration including gravity or some zero error.
+    IMU.readAcceleration(xi, yi, zi); //To set initial values of acceleration, including gravity and some zero error.
   }
   
   tapThreshold  = 0.05; //0.05 g acceleration in some direction is considered as tap. it can be changed for the required sensitivity.
@@ -34,7 +34,7 @@ void loop() {
   if (IMU.accelerationAvailable()) {
     IMU.readAcceleration(x, y, z);
     
-    // workes on difference from initial acceleration to the current acceleration
+    // works on the difference from initial acceleration to the current acceleration
     if (x -xi > tapThreshold || x-xi < -tapThreshold){
       Serial.println("Tap detected across X-axis");
     }
