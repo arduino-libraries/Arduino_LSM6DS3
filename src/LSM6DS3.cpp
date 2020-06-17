@@ -30,6 +30,7 @@
 #define LSM6DS3_WHO_AM_I_REG       0X0F
 #define LSM6DS3_CTRL1_XL           0X10
 #define LSM6DS3_CTRL2_G            0X11
+#define LSM6DS3_CTRL3_C            0X12
 
 #define LSM6DS3_STATUS_REG         0X1E
 
@@ -81,7 +82,7 @@ LSM6DS3Class::~LSM6DS3Class()
 {
 }
 
-int LSM6DS3Class::begin()
+int LSM6DS3Class::begin(bool useFIFO)
 {
   if (_spi != NULL) {
     pinMode(_csPin, OUTPUT);
@@ -96,20 +97,86 @@ int LSM6DS3Class::begin()
     return 0;
   }
 
-  //set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
+  //set the gyroscope control register to work at 104 Hz, 2000 dps, and full-scale at 125 dps
   writeRegister(LSM6DS3_CTRL2_G, 0x4C);
 
-  // Set the Accelerometer control register to work at 104 Hz, 4G,and in bypass mode and enable ODR/4
+  // Set the Accelerometer control register to work at 104 Hz, 4G, and anti-aliasing filter at 100Hz
   // low pass filter(check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
 
+  // This isn't needed; all these bits are 0 by default, according to the datasheet
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  writeRegister(LSM6DS3_CTRL7_G, 0x00);
+  // writeRegister(LSM6DS3_CTRL7_G, 0x00);
 
   // Set the ODR config register to ODR/4
   writeRegister(LSM6DS3_CTRL8_XL, 0x05);
 
+  // Measure the gyr0's average drift over 250 ms and use that for correcting data later
+  calibrate(250);
+
+  _fifoEnabled = useFIFO;
+  // Configure the FIFO if we need to use it
+  if (_fifoEnabled) {
+    // Enable Block Data Update (BDU) to make sure the output registers aren't updated until both MSB and LSB are read
+    // Keep whatever is already in that register, but make sure the one bit we care about is set to 1
+    byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
+    writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X40);
+
+    // When number of bytes in FIFO is >= 0, raise watermark flag (bits 7:0)
+    // No need to modify anything in LSM6DS3_FIFO_CTRL1 since this is default
+
+    // Disable pedometer step counter and timestamp as 4th FIFO dataset,
+    // Enable write to FIFO on XL/G ready
+    // When number of bytes in FIFO is >= 0, raise watermark flag (bits 11:8)
+    // No need to modify anything in LSM6DS3_FIFO_CTRL2 since this is default
+
+    // Don't use any decimation for either XL or G and enable XL and G in FIFO
+    writeRegister(LSM6DS3_FIFO_CTRL3, 0x11);
+
+    // No decimation for 3rd or 4th dataset
+    // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
+
+    // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and 
+    // to overwrite old samples when full (this raises the overun flag in LSM6DS3_FIFO_STATUS2)
+    // The FIFO ODR must be set <= both the XL and G ODRs
+    writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
+  }
+
   return 1;
+}
+
+bool LSM6DS3Class::calibrate(int calibrationTimeMs) {
+  // Measure the average drift over the given calibrationTimeMs
+
+  int samples = 0;
+  float calSumX = 0.0;
+  float calSumY = 0.0;
+  float calSumZ = 0.0;
+  int start = millis();
+  float gyroXRaw, gyroYRaw, gyroZRaw;
+
+  while (millis() < start + calibrationTimeMs) { 
+    if (gyroscopeAvailable()) {
+      readGyroscope(gyroXRaw, gyroYRaw, gyroZRaw);
+
+      calSumX += gyroXRaw;
+      calSumY += gyroYRaw;
+      calSumZ += gyroZRaw;
+
+      samples++;
+    }
+  }
+
+  if (samples == 0) {
+    Serial.println("Not enough samples to calibrate IMU!");
+    return false;
+  }
+
+  _gyroXDrift = calSumX / samples;
+  _gyroYDrift = calSumY / samples;
+  _gyroZDrift = calSumZ / samples;
+
+  return true;
 }
 
 void LSM6DS3Class::end()
@@ -200,6 +267,10 @@ int LSM6DS3Class::readRegister(uint8_t address)
   }
   
   return value;
+}
+
+int LSM6DS3Class::unreadFifoSampleCount() {
+  return -1;
 }
 
 int LSM6DS3Class::readRegisters(uint8_t address, uint8_t* data, size_t length)

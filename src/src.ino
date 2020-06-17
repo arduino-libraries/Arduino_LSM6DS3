@@ -13,21 +13,30 @@ void setup() {
   Serial.print("Gyroscope sample rate = ");
   Serial.print(IMU.gyroscopeSampleRate());
   Serial.println(" Hz");
+  Serial.print("Accelerometer sample rate = ");
+  Serial.print(IMU.accelerationSampleRate());
+  Serial.println(" Hz");
   Serial.println();
-  Serial.println("Gyroscope in degrees/second");
-  Serial.println("X\tY\tZ");
+  Serial.println("Acceleration in G's: X, Y, Z, Gyroscope in degrees/second: X, Y, Z");
 }
 
 void loop() {
-  float x, y, z;
+  float gX, gY, gZ, aX, aY, aZ;
 
-  if (IMU.gyroscopeAvailable()) {
-    IMU.readGyroscope(x, y, z);
+  if (IMU.gyroscopeAvailable() && IMU.accelerationAvailable()) {
+    IMU.readAcceleration(aX, aY, aZ);
+    IMU.readGyroscope(gX, gY, gZ);
 
-    Serial.print(x);
+    Serial.print(aX);
     Serial.print('\t');
-    Serial.print(y);
+    Serial.print(aY);
     Serial.print('\t');
-    Serial.println(z);
+    Serial.print(aZ);
+    Serial.print('\t');
+    Serial.print(gX);
+    Serial.print('\t');
+    Serial.print(gY);
+    Serial.print('\t');
+    Serial.println(gZ);
   }
 }

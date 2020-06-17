@@ -28,7 +28,8 @@ class LSM6DS3Class {
     LSM6DS3Class(SPIClass& spi, int csPin, int irqPin);
     virtual ~LSM6DS3Class();
 
-    int begin();
+    int begin(bool useFIFO = false);
+    bool calibrate(int calibrationTimeMs);
     void end();
 
     // Accelerometer
@@ -40,6 +41,9 @@ class LSM6DS3Class {
     virtual int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.
     virtual float gyroscopeSampleRate(); // Sampling rate of the sensor.
     virtual int gyroscopeAvailable(); // Check for available data from gyroscopeAvailable
+
+    // FIFO
+    virtual int unreadFifoSampleCount();
 
 
   private:
@@ -54,6 +58,11 @@ class LSM6DS3Class {
     uint8_t _slaveAddress;
     int _csPin;
     int _irqPin;
+    bool _fifoEnabled = false;
+
+    float _gyroXDrift = 0.0;
+    float _gyroYDrift = 0.0;
+    float _gyroZDrift = 0.0;
 
     SPISettings _spiSettings;
 };
