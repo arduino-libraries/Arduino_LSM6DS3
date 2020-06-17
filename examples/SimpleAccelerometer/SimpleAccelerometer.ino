@@ -14,7 +14,7 @@
   This example code is in the public domain.
 */
 
-#include <Arduino_LSM6DS3.h>
+#include "../../src/Arduino_LSM6DS3.h"
 
 void setup() {
   Serial.begin(9600);

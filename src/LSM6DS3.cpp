@@ -21,6 +21,12 @@
 
 #define LSM6DS3_ADDRESS            0x6A
 
+#define LSM6DS3_FIFO_CTRL1         0X06
+#define LSM6DS3_FIFO_CTRL2         0X07
+#define LSM6DS3_FIFO_CTRL3         0X08
+#define LSM6DS3_FIFO_CTRL4         0X09
+#define LSM6DS3_FIFO_CTRL5         0X0A
+
 #define LSM6DS3_WHO_AM_I_REG       0X0F
 #define LSM6DS3_CTRL1_XL           0X10
 #define LSM6DS3_CTRL2_G            0X11
@@ -30,6 +36,9 @@
 #define LSM6DS3_CTRL6_C            0X15
 #define LSM6DS3_CTRL7_G            0X16
 #define LSM6DS3_CTRL8_XL           0X17
+
+#define LSM6DS3_OUT_TEMP_L         0X20
+#define LSM6DS3_OUT_TEMP_H         0X21
 
 #define LSM6DS3_OUTX_L_G           0X22
 #define LSM6DS3_OUTX_H_G           0X23
@@ -45,6 +54,12 @@
 #define LSM6DS3_OUTZ_L_XL          0X2C
 #define LSM6DS3_OUTZ_H_XL          0X2D
 
+#define LSM6DS3_FIFO_STATUS1       0X3A
+#define LSM6DS3_FIFO_STATUS2       0X3B
+#define LSM6DS3_FIFO_STATUS3       0X3C
+#define LSM6DS3_FIFO_STATUS4       0X3D
+#define LSM6DS3_FIFO_DATA_OUT_L    0X3E
+#define LSM6DS3_FIFO_DATA_OUT_H    0X3F
 
 LSM6DS3Class::LSM6DS3Class(TwoWire& wire, uint8_t slaveAddress) :
   _wire(&wire),
@@ -92,7 +107,7 @@ int LSM6DS3Class::begin()
   writeRegister(LSM6DS3_CTRL7_G, 0x00);
 
   // Set the ODR config register to ODR/4
-  writeRegister(LSM6DS3_CTRL8_XL, 0x09);
+  writeRegister(LSM6DS3_CTRL8_XL, 0x05);
 
   return 1;
 }
