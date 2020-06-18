@@ -6,9 +6,11 @@ void setup() {
 
   if (!IMU.begin(true)) {
     Serial.println("Failed to initialize IMU!");
-
     while (1);
   }
+
+  // Measure the gyro's average drift over 250 ms and use that for correcting data later
+  IMU.calibrate(500);
 
   Serial.print("Gyroscope sample rate = ");
   Serial.print(IMU.gyroscopeSampleRate());

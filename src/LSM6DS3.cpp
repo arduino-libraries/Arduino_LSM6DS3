@@ -104,16 +104,9 @@ int LSM6DS3Class::begin(bool useFIFO)
   // low pass filter(check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
 
+  // This register is set to 0x00 by default
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  writeRegister(LSM6DS3_CTRL7_G, 0x00);
-
-  byte currentCTRL8 = readRegister(LSM6DS3_CTRL8_XL);
-  Serial.println("Current CTRL8_XL (" + String(LSM6DS3_CTRL8_XL, HEX) + "): " + String(currentCTRL8, BIN));
-  // Set the ODR config register to ODR/4
-  //writeRegister(LSM6DS3_CTRL8_XL, 0x05);
-
-  // Measure the gyr0's average drift over 250 ms and use that for correcting data later
-  calibrate(250);
+  //writeRegister(LSM6DS3_CTRL7_G, 0x00);
 
   _fifoEnabled = useFIFO;
   // Configure the FIFO if we need to use it
@@ -146,7 +139,20 @@ int LSM6DS3Class::begin(bool useFIFO)
   return 1;
 }
 
-bool LSM6DS3Class::calibrate(int calibrationTimeMs) {
+void LSM6DS3Class::end()
+{
+  if (_spi != NULL) {
+    _spi->end();
+    digitalWrite(_csPin, LOW);
+    pinMode(_csPin, INPUT);
+  } else {
+    writeRegister(LSM6DS3_CTRL2_G, 0x00);
+    writeRegister(LSM6DS3_CTRL1_XL, 0x00);
+    _wire->end();
+  }
+}
+
+bool LSM6DS3Class::calibrate(int ms) {
   // Measure the average drift over the given calibrationTimeMs
 
   int samples = 0;
@@ -156,7 +162,7 @@ bool LSM6DS3Class::calibrate(int calibrationTimeMs) {
   int start = millis();
   float gyroXRaw, gyroYRaw, gyroZRaw;
 
-  while (millis() < start + calibrationTimeMs) { 
+  while (millis() < start + ms) { 
     if (gyroscopeAvailable()) {
       readGyroscope(gyroXRaw, gyroYRaw, gyroZRaw);
 
@@ -173,24 +179,23 @@ bool LSM6DS3Class::calibrate(int calibrationTimeMs) {
     return false;
   }
 
-  _gyroXDrift = calSumX / samples;
-  _gyroYDrift = calSumY / samples;
-  _gyroZDrift = calSumZ / samples;
+  _gyroXOffset = calSumX / samples;
+  _gyroYOffset = calSumY / samples;
+  _gyroZOffset = calSumZ / samples;
 
   return true;
 }
 
-void LSM6DS3Class::end()
-{
-  if (_spi != NULL) {
-    _spi->end();
-    digitalWrite(_csPin, LOW);
-    pinMode(_csPin, INPUT);
-  } else {
-    writeRegister(LSM6DS3_CTRL2_G, 0x00);
-    writeRegister(LSM6DS3_CTRL1_XL, 0x00);
-    _wire->end();
-  }
+void LSM6DS3Class::getGyroOffsets(float& x, float& y, float& z) {
+  x = _gyroXOffset;
+  y = _gyroYOffset;
+  z = _gyroZOffset;
+}
+
+void LSM6DS3Class::setGyroOffsets(float x, float y, float z) {
+  _gyroXOffset = x;
+  _gyroYOffset = y;
+  _gyroZOffset = z;
 }
 
 int LSM6DS3Class::readAcceleration(float& x, float& y, float& z)
@@ -238,9 +243,9 @@ int LSM6DS3Class::readGyroscope(float& x, float& y, float& z)
     return 0;
   }
 
-  x = data[0] * 2000.0 / 32768.0;
-  y = data[1] * 2000.0 / 32768.0;
-  z = data[2] * 2000.0 / 32768.0;
+  x = data[0] * 2000.0 / 32768.0 - _gyroXOffset;
+  y = data[1] * 2000.0 / 32768.0 - _gyroYOffset;
+  z = data[2] * 2000.0 / 32768.0 - _gyroZOffset;
 
   return 1;
 }
@@ -276,8 +281,18 @@ bool LSM6DS3Class::readFifo() {
   for (int i = 0; i < 9; ++i) {
     readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
     if (i >= 3 && i <= 5) {
-      // Serial.print(String(data[0] * 2000.0 / 32768.0));
-      // Serial.print("\t");
+      float d = data[0] * 2000.0 / 32768.0;
+      if (i == 3)
+        d -= _gyroXOffset;
+      else if (i == 4)
+        d -= _gyroYOffset;
+      else 
+        d -= _gyroZOffset;
+
+      if (d >= 0)
+        Serial.print(" ");
+      Serial.print(String(d));
+      Serial.print("\t");
     } else {
       float d = data[0] * 4.0 / 32768.0;
       if (d >= 0)

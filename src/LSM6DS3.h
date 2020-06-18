@@ -29,8 +29,12 @@ class LSM6DS3Class {
     virtual ~LSM6DS3Class();
 
     int begin(bool useFIFO = false);
-    bool calibrate(int calibrationTimeMs);
     void end();
+
+    bool calibrate(int ms);
+    void getGyroOffsets(float& x, float& y, float& z);
+    void setGyroOffsets(float x, float y, float z);
+    
 
     // Accelerometer
     virtual int readAcceleration(float& x, float& y, float& z); // Results are in G (earth gravity).
@@ -65,9 +69,9 @@ class LSM6DS3Class {
     bool _fifoEnabled = false;
     bool _fifoOverRunFlag = false;
 
-    float _gyroXDrift = 0.0;
-    float _gyroYDrift = 0.0;
-    float _gyroZDrift = 0.0;
+    float _gyroXOffset = 0.0;
+    float _gyroYOffset = 0.0;
+    float _gyroZOffset = 0.0;
 
     SPISettings _spiSettings;
 };
