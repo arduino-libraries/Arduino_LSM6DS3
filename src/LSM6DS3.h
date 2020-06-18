@@ -28,8 +28,10 @@ class LSM6DS3Class {
     LSM6DS3Class(SPIClass& spi, int csPin, int irqPin);
     virtual ~LSM6DS3Class();
 
-    int begin(bool useFIFO = false);
+    int begin();
     void end();
+
+    void enableFifo();
 
     bool calibrate(int ms);
     void getGyroOffsets(float& x, float& y, float& z);

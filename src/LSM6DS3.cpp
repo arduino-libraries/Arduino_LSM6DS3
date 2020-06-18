@@ -82,7 +82,7 @@ LSM6DS3Class::~LSM6DS3Class()
 {
 }
 
-int LSM6DS3Class::begin(bool useFIFO)
+int LSM6DS3Class::begin()
 {
   if (_spi != NULL) {
     pinMode(_csPin, OUTPUT);
@@ -97,44 +97,22 @@ int LSM6DS3Class::begin(bool useFIFO)
     return 0;
   }
 
+  // Reset the LSM6DS3. If we didn't do this, the microcontroller can reset
+  // and the LSM6DS3 could be in an unexpected state. For example, the FIFO could
+  // be enabled and stay enabled if the whole system doesn't lose power but the reset
+  // button is pressed.
+  byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
+  writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X01);
+
+  // Delay a bit and make sure it has had plenty of time to reset
+  delay(5);
+
   //set the gyroscope control register to work at 104 Hz, 2000 dps, and full-scale at 125 dps
   writeRegister(LSM6DS3_CTRL2_G, 0x4C);
 
   // Set the Accelerometer control register to work at 104 Hz, 4G, and anti-aliasing filter at 100Hz
   // low pass filter(check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
-
-  // This register is set to 0x00 by default
-  // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  //writeRegister(LSM6DS3_CTRL7_G, 0x00);
-
-  _fifoEnabled = useFIFO;
-  // Configure the FIFO if we need to use it
-  if (_fifoEnabled) {
-    // Enable Block Data Update (BDU) to make sure the output registers aren't updated until both MSB and LSB are read
-    // Keep whatever is already in that register, but make sure the one bit we care about is set to 1
-    byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
-    writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X40);
-
-    // When number of bytes in FIFO is >= 0, raise watermark flag (bits 7:0)
-    // No need to modify anything in LSM6DS3_FIFO_CTRL1 since this is default
-
-    // Disable pedometer step counter and timestamp as 4th FIFO dataset,
-    // Enable write to FIFO on XL/G ready
-    // When number of bytes in FIFO is >= 0, raise watermark flag (bits 11:8)
-    // No need to modify anything in LSM6DS3_FIFO_CTRL2 since this is default
-
-    // Don't use any decimation for either XL or G and enable XL and G in FIFO
-    writeRegister(LSM6DS3_FIFO_CTRL3, 0x11);
-
-    // No decimation for 3rd or 4th dataset and don't put them in the FIFO
-    // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
-
-    // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and 
-    // to overwrite old samples when full (this raises the overun flag in LSM6DS3_FIFO_STATUS2)
-    // The FIFO ODR must be set <= both the XL and G ODRs
-    writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
-  }
 
   return 1;
 }
@@ -153,8 +131,11 @@ void LSM6DS3Class::end()
 }
 
 bool LSM6DS3Class::calibrate(int ms) {
-  // Measure the average drift over the given calibrationTimeMs
-
+  // Let things have a chance to settle down or we might 
+  // get some odd values that throw off our averages
+  delay(ms);
+  
+  // Measure the average drift over the given ms
   int samples = 0;
   float calSumX = 0.0;
   float calSumY = 0.0;
@@ -264,6 +245,32 @@ float LSM6DS3Class::gyroscopeSampleRate()
   return 104.0F;
 }
 
+void LSM6DS3Class::enableFifo() {
+  // Enable Block Data Update (BDU) to make sure the output registers aren't updated until both MSByte and LSByte are read
+  // Keep whatever is already in that register, but make sure the one bit we care about is set to 1
+  byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
+  writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X40);
+
+  // When number of bytes in FIFO is >= 0, raise watermark flag (bits 7:0)
+  // No need to modify anything in LSM6DS3_FIFO_CTRL1 since this is default
+
+  // Disable pedometer step counter and timestamp as 4th FIFO dataset,
+  // Enable write to FIFO on XL/G ready
+  // When number of bytes in FIFO is >= 0, raise watermark flag (bits 11:8)
+  // No need to modify anything in LSM6DS3_FIFO_CTRL2 since this is default
+
+  // Don't use any decimation for either XL or G and enable XL and G to write to FIFO
+  writeRegister(LSM6DS3_FIFO_CTRL3, 0x11);
+
+  // No decimation for 3rd or 4th dataset and don't put them in the FIFO
+  // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
+
+  // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and
+  // to overwrite old samples when full (this raises the overun flag in LSM6DS3_FIFO_STATUS2)
+  // The FIFO ODR must be set <= both the XL and G ODRs
+  writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
+}
+
 int LSM6DS3Class::unreadFifoSampleCount() {
   int16_t data[1];
   if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
@@ -278,7 +285,7 @@ int LSM6DS3Class::unreadFifoSampleCount() {
 
 bool LSM6DS3Class::readFifo() {
   int16_t data[1];
-  for (int i = 0; i < 9; ++i) {
+  for (int i = 0; i < 6; ++i) {
     readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
     if (i >= 3 && i <= 5) {
       float d = data[0] * 2000.0 / 32768.0;
