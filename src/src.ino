@@ -4,7 +4,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
 
-  if (!IMU.begin()) {
+  if (!IMU.begin(true)) {
     Serial.println("Failed to initialize IMU!");
 
     while (1);
@@ -18,11 +18,35 @@ void setup() {
   Serial.println(" Hz");
   Serial.println();
   Serial.println("Acceleration in G's: X, Y, Z, Gyroscope in degrees/second: X, Y, Z");
+  delay(2000);
 }
 
 void loop() {
   float gX, gY, gZ, aX, aY, aZ;
 
+  int count = IMU.unreadFifoSampleCount();
+  if (IMU.fifoOverrun()) {
+    Serial.println("FIFO Overflow! Stopping");
+    while (true) {
+      delay(100);
+    }
+  }
+  /*
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(aX, aY, aZ);
+    Serial.println("\t" + String(aX) + "\t" + String(aY) + "\t" + String(aZ));
+  }
+  */
+  if (count >= 6) {
+      Serial.print(String(count) + "\t");
+      IMU.readFifo();
+      count = IMU.unreadFifoSampleCount();
+      Serial.println(count);
+  }
+  // Serial.println(count);
+  //IMU.readFifo();
+
+  /*
   if (IMU.gyroscopeAvailable() && IMU.accelerationAvailable()) {
     IMU.readAcceleration(aX, aY, aZ);
     IMU.readGyroscope(gX, gY, gZ);
@@ -39,4 +63,6 @@ void loop() {
     Serial.print('\t');
     Serial.println(gZ);
   }
+  //*/
+  
 }

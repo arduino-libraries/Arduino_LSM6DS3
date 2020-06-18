@@ -44,6 +44,9 @@ class LSM6DS3Class {
 
     // FIFO
     virtual int unreadFifoSampleCount();
+    virtual bool readFifo();
+    virtual bool fifoOverrun();
+    virtual void clearFifoFlags();
 
 
   private:
@@ -58,7 +61,9 @@ class LSM6DS3Class {
     uint8_t _slaveAddress;
     int _csPin;
     int _irqPin;
+    
     bool _fifoEnabled = false;
+    bool _fifoOverRunFlag = false;
 
     float _gyroXDrift = 0.0;
     float _gyroYDrift = 0.0;

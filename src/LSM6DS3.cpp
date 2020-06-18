@@ -104,12 +104,13 @@ int LSM6DS3Class::begin(bool useFIFO)
   // low pass filter(check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
 
-  // This isn't needed; all these bits are 0 by default, according to the datasheet
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  // writeRegister(LSM6DS3_CTRL7_G, 0x00);
+  writeRegister(LSM6DS3_CTRL7_G, 0x00);
 
+  byte currentCTRL8 = readRegister(LSM6DS3_CTRL8_XL);
+  Serial.println("Current CTRL8_XL (" + String(LSM6DS3_CTRL8_XL, HEX) + "): " + String(currentCTRL8, BIN));
   // Set the ODR config register to ODR/4
-  writeRegister(LSM6DS3_CTRL8_XL, 0x05);
+  //writeRegister(LSM6DS3_CTRL8_XL, 0x05);
 
   // Measure the gyr0's average drift over 250 ms and use that for correcting data later
   calibrate(250);
@@ -133,7 +134,7 @@ int LSM6DS3Class::begin(bool useFIFO)
     // Don't use any decimation for either XL or G and enable XL and G in FIFO
     writeRegister(LSM6DS3_FIFO_CTRL3, 0x11);
 
-    // No decimation for 3rd or 4th dataset
+    // No decimation for 3rd or 4th dataset and don't put them in the FIFO
     // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
 
     // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and 
@@ -258,6 +259,57 @@ float LSM6DS3Class::gyroscopeSampleRate()
   return 104.0F;
 }
 
+int LSM6DS3Class::unreadFifoSampleCount() {
+  int16_t data[1];
+  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
+    // Since we have the data here, check if the fifo has overran
+    _fifoOverRunFlag = data[0] & 0X4000;
+    // Mask the data we want
+    int unreadSamples = data[0] & 0XFFF;
+    return unreadSamples;
+  }
+  return -1;
+}
+
+bool LSM6DS3Class::readFifo() {
+  int16_t data[1];
+  for (int i = 0; i < 9; ++i) {
+    readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
+    if (i >= 3 && i <= 5) {
+      // Serial.print(String(data[0] * 2000.0 / 32768.0));
+      // Serial.print("\t");
+    } else {
+      float d = data[0] * 4.0 / 32768.0;
+      if (d >= 0)
+        Serial.print(" ");
+
+      Serial.print(String(d));
+      Serial.print("\t");
+    }
+  }
+  
+  return true;
+}
+
+bool LSM6DS3Class::fifoOverrun() {
+  if (_fifoOverRunFlag) {
+    return true;
+  }
+
+  int16_t data[1];
+  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
+    // check if the fifo has overran
+    _fifoOverRunFlag = data[0] & 0X4000;
+    return _fifoOverRunFlag;
+  } else {
+    return true;
+  }
+}
+
+void LSM6DS3Class::clearFifoFlags() {
+  
+}
+
 int LSM6DS3Class::readRegister(uint8_t address)
 {
   uint8_t value;
@@ -267,10 +319,6 @@ int LSM6DS3Class::readRegister(uint8_t address)
   }
   
   return value;
-}
-
-int LSM6DS3Class::unreadFifoSampleCount() {
-  return -1;
 }
 
 int LSM6DS3Class::readRegisters(uint8_t address, uint8_t* data, size_t length)
@@ -314,6 +362,7 @@ int LSM6DS3Class::writeRegister(uint8_t address, uint8_t value)
     _wire->beginTransmission(_slaveAddress);
     _wire->write(address);
     _wire->write(value);
+
     if (_wire->endTransmission() != 0) {
       return 0;
     }
