@@ -109,7 +109,7 @@ void doCalculations() {
   accRoll = atan2(accelY, accelZ) * 180 / M_PI;
   accPitch = atan2(-accelX, sqrt(accelY * accelY + accelZ * accelZ)) * 180 / M_PI;
 
-  float lastFrequency = 1000000 / lastInterval;
+  float lastFrequency = (float) 1000000.0 / lastInterval;
   gyroRoll = gyroRoll + (gyroX / lastFrequency);
   gyroPitch = gyroPitch + (gyroY / lastFrequency);
   gyroYaw = gyroYaw + (gyroZ / lastFrequency);
