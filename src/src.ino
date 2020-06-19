@@ -22,7 +22,7 @@ void setup() {
   float cgX, cgY, cgZ;
   IMU.getGyroOffsets(cgX, cgY, cgZ);
   Serial.println("Gyro offsets =>\tX: " + String(cgX) + " \tY: " + String(cgY) + "\tZ: " + String(cgZ));
-  IMU.setGyroOffsets(0.0, 0.0, 0.0);
+  //IMU.setGyroOffsets(0.0, 0.0, 0.0);
   Serial.println("Enabling FIFO in 3 seconds");
   delay(3000);
 

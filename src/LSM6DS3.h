@@ -21,7 +21,7 @@
 #include <Wire.h>
 #include <SPI.h>
 
-#define FIFO_DATASET_WIDTH 9
+#define FIFO_DATASET_WIDTH 6
 
 class LSM6DS3Class {
   public:

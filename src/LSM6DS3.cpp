@@ -260,7 +260,7 @@ void LSM6DS3Class::enableFifo() {
   // No need to modify anything in LSM6DS3_FIFO_CTRL2 since this is default
 
   // Don't use any decimation for either XL or G and enable XL and G to write to FIFO
-  writeRegister(LSM6DS3_FIFO_CTRL3, 0x11);
+  writeRegister(LSM6DS3_FIFO_CTRL3, 0X09);
 
   // No decimation for 3rd or 4th dataset and don't put them in the FIFO
   // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
@@ -300,11 +300,11 @@ void LSM6DS3Class::fifoRead(float values[][FIFO_DATASET_WIDTH], size_t &length, 
       if (patternPosition >= 0 && patternPosition <= 2) {
         values[j][i] = data[0] * 2000.0 / 32768.0;
         // Apply gryo offsets
-        if (i == 3)
+        if (i == 0)
           values[j][i] -= _gyroXOffset;
-        else if (i == 4)
+        else if (i == 1)
           values[j][i] -= _gyroYOffset;
-        else 
+        else if (i == 2)
           values[j][i] -= _gyroZOffset;
       } else {
         values[j][i] = data[0] * 4.0 / 32768.0;
