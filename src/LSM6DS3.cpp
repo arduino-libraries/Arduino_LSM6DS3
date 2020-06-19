@@ -269,64 +269,98 @@ void LSM6DS3Class::enableFifo() {
   // to overwrite old samples when full (this raises the overun flag in LSM6DS3_FIFO_STATUS2)
   // The FIFO ODR must be set <= both the XL and G ODRs
   writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
+
+  _fifoEnabled = true;
+}
+
+void LSM6DS3Class::disableFifo() {
+  // configure the FIFO to bypass mode
+  writeRegister(LSM6DS3_FIFO_CTRL5, 0x00);
+  _fifoEnabled = false;
+}
+
+void LSM6DS3Class::resetFifo() {
+  disableFifo();
+  enableFifo();
 }
 
 int LSM6DS3Class::fifoLength() {
+  if (!_fifoEnabled) {
+    return -1;
+  }
+
   int16_t data[1];
   if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data))) {
     // Mask the data we want
     int unreadSamples = data[0] & 0XFFF;
-    return unreadSamples;
+    return unreadSamples / FIFO_SAMPLE_WIDTH;
   }
   return -1;
 }
 
-void LSM6DS3Class::fifoRead(float values[][FIFO_DATASET_WIDTH], size_t &length, size_t readCount, size_t bufferSize) {
-  length = 0;
-  int16_t data[1];
+size_t LSM6DS3Class::fifoRead(float samples[][FIFO_SAMPLE_WIDTH], size_t length) {
+  if (!_fifoEnabled) {
+    return -1;
+  }
 
-  for (int j = 0; j < bufferSize && j < readCount; ++j) {
-    // Read entire set of accelerometer and gyroscope samples (XYZ for both)
+  size_t bytesRead = 0;
+  int16_t data[1];
+  int fifoLength = IMU.fifoLength();
+  if (fifoLength < 1) {
+    // There isn't enough data to read to fill at least one sample in our samples array
+    return bytesRead;
+  }
+
+  for (int j = 0; j < length && j < fifoLength; ++j) {
+    // Read entire set of accelerometer and gyroscope readings (XYZ for both)
     // We have to read it one at a time because we can only read the data out 
     // from the one register. Probably need to make a new method or modify
     // readRegisters() so that it can read the same register multiple times
-    for (int i = 0; i < FIFO_DATASET_WIDTH; ++i) {
+    for (int i = 0; i < FIFO_SAMPLE_WIDTH; ++i) {
+      // Find what poisition we're in for the current sample
+      // We're going to have a bad day if we're ever out of sync
       int patternPosition = fifoWordOfRecursivePattern();
-      Serial.print("  " + String(patternPosition, HEX) + "\t");
       readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
-      // I haven't found a perfect way of determining exactly what data is what,
-      // so we're hoping we're able to continuously read them in the correct order
-      // Might need to have a variable to try to track it.
-      if (patternPosition >= 0 && patternPosition <= 2) {
-        values[j][i] = data[0] * 2000.0 / 32768.0;
-        // Apply gryo offsets
-        if (i == 0)
-          values[j][i] -= _gyroXOffset;
-        else if (i == 1)
-          values[j][i] -= _gyroYOffset;
-        else if (i == 2)
-          values[j][i] -= _gyroZOffset;
-      } else {
-        values[j][i] = data[0] * 4.0 / 32768.0;
+
+      // Convert the value and apply gryo offsets
+      if (patternPosition == 0){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroXOffset;
+      }
+      else if (patternPosition == 1){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroYOffset;
+      }
+      else if (patternPosition == 2){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroZOffset;
+      }
+      else {
+        samples[j][i] = data[0] * 4.0 / 32768.0;
       }
     }
-    Serial.println();
-    length++;
+    bytesRead++;
   }
+
+  return bytesRead;
 }
 
 bool LSM6DS3Class::fifoOverrun() {
-  int16_t data[1];
-  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
-    // check if the fifo has overran
-    _fifoOverRunFlag = data[0] & 0X4000;
-    return _fifoOverRunFlag;
-  } else {
+  if (!_fifoEnabled) {
     return true;
   }
+
+  int16_t data[1];
+  readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data));
+  // check if the fifo has overran
+  return data[0] & 0X4000;
 }
 
 int LSM6DS3Class::fifoWordOfRecursivePattern() {
+  if (!_fifoEnabled) {
+    return -1;
+  }
+
   int16_t data[1];
   if (readRegisters(LSM6DS3_FIFO_STATUS3, (uint8_t*)data, sizeof(data)) == 1) {
     return data[0] & 0X3FF;

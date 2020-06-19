@@ -21,7 +21,7 @@
 #include <Wire.h>
 #include <SPI.h>
 
-#define FIFO_DATASET_WIDTH 6
+#define FIFO_SAMPLE_WIDTH 6
 
 class LSM6DS3Class {
   public:
@@ -32,8 +32,7 @@ class LSM6DS3Class {
     int begin();
     void end();
 
-    void enableFifo();
-
+    // Gyroscope calibration
     bool calibrate(int ms);
     void getGyroOffsets(float& x, float& y, float& z);
     void setGyroOffsets(float x, float y, float z);
@@ -50,18 +49,24 @@ class LSM6DS3Class {
     virtual int gyroscopeAvailable(); // Check for available data from gyroscopeAvailable
 
     // FIFO
+    void enableFifo();
+    void disableFifo();
+    void resetFifo();
     virtual int fifoLength(); // Returns number of unread values in the fifo
-    virtual void fifoRead(float values[][FIFO_DATASET_WIDTH], size_t &length, size_t readCount, size_t bufferSize);
+    // fifo sample: array of gyro x, y, z values followed by accelerometer x, y, z values
+    virtual size_t fifoRead(float samples[][FIFO_SAMPLE_WIDTH], size_t length);
     virtual bool fifoOverrun(); // Checks if the fifo has been overrun
-
-    // Haven't figured out what the datasheet means by "word of recursive pattern"
-    virtual int fifoWordOfRecursivePattern();
 
 
   private:
     int readRegister(uint8_t address);
     int readRegisters(uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t address, uint8_t value);
+
+    // Indicates the current position in the current sample the FIFO is currently pointing to
+    // Still not fully sure of the rules behind this number as the datasheet doesn't say anything
+    // other than "Word of recursive pattern read at the next reading"
+    virtual int fifoWordOfRecursivePattern();
 
 
   private:
@@ -72,7 +77,6 @@ class LSM6DS3Class {
     int _irqPin;
     
     bool _fifoEnabled = false;
-    bool _fifoOverRunFlag = false;
 
     float _gyroXOffset = 0.0;
     float _gyroYOffset = 0.0;
