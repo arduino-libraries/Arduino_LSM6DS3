@@ -21,6 +21,7 @@
 #include <Wire.h>
 #include <SPI.h>
 
+#define FIFO_DATASET_WIDTH 9
 
 class LSM6DS3Class {
   public:
@@ -50,8 +51,11 @@ class LSM6DS3Class {
 
     // FIFO
     virtual int fifoLength(); // Returns number of unread values in the fifo
-    virtual void fifoRead(float values[][6], size_t &length, size_t readCount, size_t bufferSize);
+    virtual void fifoRead(float values[][FIFO_DATASET_WIDTH], size_t &length, size_t readCount, size_t bufferSize);
     virtual bool fifoOverrun(); // Checks if the fifo has been overrun
+
+    // Haven't figured out what the datasheet means by "word of recursive pattern"
+    virtual int fifoWordOfRecursivePattern();
 
 
   private:

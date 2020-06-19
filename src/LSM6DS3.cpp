@@ -281,7 +281,7 @@ int LSM6DS3Class::fifoLength() {
   return -1;
 }
 
-void LSM6DS3Class::fifoRead(float values[][6], size_t &length, size_t readCount, size_t bufferSize) {
+void LSM6DS3Class::fifoRead(float values[][FIFO_DATASET_WIDTH], size_t &length, size_t readCount, size_t bufferSize) {
   length = 0;
   int16_t data[1];
 
@@ -290,12 +290,14 @@ void LSM6DS3Class::fifoRead(float values[][6], size_t &length, size_t readCount,
     // We have to read it one at a time because we can only read the data out 
     // from the one register. Probably need to make a new method or modify
     // readRegisters() so that it can read the same register multiple times
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < FIFO_DATASET_WIDTH; ++i) {
+      int patternPosition = fifoWordOfRecursivePattern();
+      Serial.print("  " + String(patternPosition, HEX) + "\t");
       readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
       // I haven't found a perfect way of determining exactly what data is what,
       // so we're hoping we're able to continuously read them in the correct order
       // Might need to have a variable to try to track it.
-      if (i >= 3 && i <= 5) {
+      if (patternPosition >= 0 && patternPosition <= 2) {
         values[j][i] = data[0] * 2000.0 / 32768.0;
         // Apply gryo offsets
         if (i == 3)
@@ -308,6 +310,7 @@ void LSM6DS3Class::fifoRead(float values[][6], size_t &length, size_t readCount,
         values[j][i] = data[0] * 4.0 / 32768.0;
       }
     }
+    Serial.println();
     length++;
   }
 }
@@ -320,6 +323,15 @@ bool LSM6DS3Class::fifoOverrun() {
     return _fifoOverRunFlag;
   } else {
     return true;
+  }
+}
+
+int LSM6DS3Class::fifoWordOfRecursivePattern() {
+  int16_t data[1];
+  if (readRegisters(LSM6DS3_FIFO_STATUS3, (uint8_t*)data, sizeof(data)) == 1) {
+    return data[0] & 0X3FF;
+  } else {
+    return -1;
   }
 }
 
