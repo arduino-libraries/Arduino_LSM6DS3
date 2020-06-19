@@ -1,6 +1,9 @@
 #include "Arduino_LSM6DS3.h"
 
+#define FIFO_READ_BUFFER_SIZE 50
 bool useFifo = true;
+float values[FIFO_READ_BUFFER_SIZE][6];
+size_t length = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -25,7 +28,7 @@ void loop() {
   float gX, gY, gZ, aX, aY, aZ;
 
   if (useFifo) {
-    int fifoLength = IMU.unreadFifoSampleCount();
+    int fifoLength = IMU.fifoLength();
     if (IMU.fifoOverrun()) {
       Serial.println("FIFO Overflow! Stopping");
       while (true) {
@@ -33,10 +36,21 @@ void loop() {
       }
     }
 
-    if (fifoLength >= 6) {
-      Serial.print(String(fifoLength) + "\t"); // Count in FIFO before reading
-      IMU.readFifo(); // Prints tab seperated values from FIFO
-      Serial.println(IMU.unreadFifoSampleCount()); // Count in FIFO after reading
+    if (fifoLength >= 12) {
+      IMU.fifoRead(values, length, fifoLength / 6, FIFO_READ_BUFFER_SIZE);
+      for (int i = 0; i < length; ++i) {
+        PrintValues(
+          values[i][0],
+          values[i][1],
+          values[i][2],
+          values[i][3],
+          values[i][4],
+          values[i][5]
+        );
+        Serial.println();
+      }
+      Serial.println("-----------------------------------------------");
+      delay(200);
     }
   } else {
     if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()) {

@@ -49,10 +49,9 @@ class LSM6DS3Class {
     virtual int gyroscopeAvailable(); // Check for available data from gyroscopeAvailable
 
     // FIFO
-    virtual int unreadFifoSampleCount();
-    virtual bool readFifo();
-    virtual bool fifoOverrun();
-    virtual void clearFifoFlags();
+    virtual int fifoLength(); // Returns number of unread values in the fifo
+    virtual void fifoRead(float values[][6], size_t &length, size_t readCount, size_t bufferSize);
+    virtual bool fifoOverrun(); // Checks if the fifo has been overrun
 
 
   private:

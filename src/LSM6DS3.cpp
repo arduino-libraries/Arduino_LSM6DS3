@@ -271,11 +271,9 @@ void LSM6DS3Class::enableFifo() {
   writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
 }
 
-int LSM6DS3Class::unreadFifoSampleCount() {
+int LSM6DS3Class::fifoLength() {
   int16_t data[1];
-  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
-    // Since we have the data here, check if the fifo has overran
-    _fifoOverRunFlag = data[0] & 0X4000;
+  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data))) {
     // Mask the data we want
     int unreadSamples = data[0] & 0XFFF;
     return unreadSamples;
@@ -283,41 +281,38 @@ int LSM6DS3Class::unreadFifoSampleCount() {
   return -1;
 }
 
-bool LSM6DS3Class::readFifo() {
+void LSM6DS3Class::fifoRead(float values[][6], size_t &length, size_t readCount, size_t bufferSize) {
+  length = 0;
   int16_t data[1];
-  for (int i = 0; i < 6; ++i) {
-    readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
-    if (i >= 3 && i <= 5) {
-      float d = data[0] * 2000.0 / 32768.0;
-      if (i == 3)
-        d -= _gyroXOffset;
-      else if (i == 4)
-        d -= _gyroYOffset;
-      else 
-        d -= _gyroZOffset;
 
-      if (d >= 0)
-        Serial.print(" ");
-      Serial.print(String(d));
-      Serial.print("\t");
-    } else {
-      float d = data[0] * 4.0 / 32768.0;
-      if (d >= 0)
-        Serial.print(" ");
-
-      Serial.print(String(d));
-      Serial.print("\t");
+  for (int j = 0; j < bufferSize && j < readCount; ++j) {
+    // Read entire set of accelerometer and gyroscope samples (XYZ for both)
+    // We have to read it one at a time because we can only read the data out 
+    // from the one register. Probably need to make a new method or modify
+    // readRegisters() so that it can read the same register multiple times
+    for (int i = 0; i < 6; ++i) {
+      readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
+      // I haven't found a perfect way of determining exactly what data is what,
+      // so we're hoping we're able to continuously read them in the correct order
+      // Might need to have a variable to try to track it.
+      if (i >= 3 && i <= 5) {
+        values[j][i] = data[0] * 2000.0 / 32768.0;
+        // Apply gryo offsets
+        if (i == 3)
+          values[j][i] -= _gyroXOffset;
+        else if (i == 4)
+          values[j][i] -= _gyroYOffset;
+        else 
+          values[j][i] -= _gyroZOffset;
+      } else {
+        values[j][i] = data[0] * 4.0 / 32768.0;
+      }
     }
+    length++;
   }
-  
-  return true;
 }
 
 bool LSM6DS3Class::fifoOverrun() {
-  if (_fifoOverRunFlag) {
-    return true;
-  }
-
   int16_t data[1];
   if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data)) == 1) {
     // check if the fifo has overran
@@ -326,10 +321,6 @@ bool LSM6DS3Class::fifoOverrun() {
   } else {
     return true;
   }
-}
-
-void LSM6DS3Class::clearFifoFlags() {
-  
 }
 
 int LSM6DS3Class::readRegister(uint8_t address)
