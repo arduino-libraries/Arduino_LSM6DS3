@@ -20,7 +20,9 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include "LSM6DS3_Types.h"
 
+#define FIFO_SAMPLE_WIDTH 6
 
 class LSM6DS3Class {
   public:
@@ -31,21 +33,42 @@ class LSM6DS3Class {
     int begin();
     void end();
 
+    // Gyroscope calibration
+    bool calibrate(int ms);
+    void getGyroOffsets(float& x, float& y, float& z);
+    void setGyroOffsets(float x, float y, float z);
+    
+
     // Accelerometer
     virtual int readAcceleration(float& x, float& y, float& z); // Results are in G (earth gravity).
     virtual float accelerationSampleRate(); // Sampling rate of the sensor.
     virtual int accelerationAvailable(); // Check for available data from accerometer
+    virtual void setAccelerationFilter(LSM6DS3::AccelerometerFilter filter);
 
     // Gyroscope
     virtual int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.
     virtual float gyroscopeSampleRate(); // Sampling rate of the sensor.
     virtual int gyroscopeAvailable(); // Check for available data from gyroscopeAvailable
 
+    // FIFO
+    void enableFifo();
+    void disableFifo();
+    void resetFifo();
+    virtual int fifoLength(); // Returns number of unread values in the fifo
+    // fifo sample: array of gyro x, y, z values followed by accelerometer x, y, z values
+    virtual size_t fifoRead(float samples[][FIFO_SAMPLE_WIDTH], size_t length);
+    virtual bool fifoOverrun(); // Checks if the fifo has been overrun
+
 
   private:
     int readRegister(uint8_t address);
     int readRegisters(uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t address, uint8_t value);
+
+    // Indicates the current position in the current sample the FIFO is currently pointing to
+    // Still not fully sure of the rules behind this number as the datasheet doesn't say anything
+    // other than "Word of recursive pattern read at the next reading"
+    virtual int fifoWordOfRecursivePattern();
 
 
   private:
@@ -54,6 +77,12 @@ class LSM6DS3Class {
     uint8_t _slaveAddress;
     int _csPin;
     int _irqPin;
+    
+    bool _fifoEnabled = false;
+
+    float _gyroXOffset = 0.0;
+    float _gyroYOffset = 0.0;
+    float _gyroZOffset = 0.0;
 
     SPISettings _spiSettings;
 };

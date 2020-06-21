@@ -21,15 +21,25 @@
 
 #define LSM6DS3_ADDRESS            0x6A
 
+#define LSM6DS3_FIFO_CTRL1         0X06
+#define LSM6DS3_FIFO_CTRL2         0X07
+#define LSM6DS3_FIFO_CTRL3         0X08
+#define LSM6DS3_FIFO_CTRL4         0X09
+#define LSM6DS3_FIFO_CTRL5         0X0A
+
 #define LSM6DS3_WHO_AM_I_REG       0X0F
 #define LSM6DS3_CTRL1_XL           0X10
 #define LSM6DS3_CTRL2_G            0X11
+#define LSM6DS3_CTRL3_C            0X12
 
 #define LSM6DS3_STATUS_REG         0X1E
 
 #define LSM6DS3_CTRL6_C            0X15
 #define LSM6DS3_CTRL7_G            0X16
 #define LSM6DS3_CTRL8_XL           0X17
+
+#define LSM6DS3_OUT_TEMP_L         0X20
+#define LSM6DS3_OUT_TEMP_H         0X21
 
 #define LSM6DS3_OUTX_L_G           0X22
 #define LSM6DS3_OUTX_H_G           0X23
@@ -45,6 +55,12 @@
 #define LSM6DS3_OUTZ_L_XL          0X2C
 #define LSM6DS3_OUTZ_H_XL          0X2D
 
+#define LSM6DS3_FIFO_STATUS1       0X3A
+#define LSM6DS3_FIFO_STATUS2       0X3B
+#define LSM6DS3_FIFO_STATUS3       0X3C
+#define LSM6DS3_FIFO_STATUS4       0X3D
+#define LSM6DS3_FIFO_DATA_OUT_L    0X3E
+#define LSM6DS3_FIFO_DATA_OUT_H    0X3F
 
 LSM6DS3Class::LSM6DS3Class(TwoWire& wire, uint8_t slaveAddress) :
   _wire(&wire),
@@ -81,18 +97,22 @@ int LSM6DS3Class::begin()
     return 0;
   }
 
-  //set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
+  // Reset the LSM6DS3. If we didn't do this, the microcontroller can reset
+  // and the LSM6DS3 could be in an unexpected state. For example, the FIFO could
+  // be enabled and stay enabled if the whole system doesn't lose power but the reset
+  // button is pressed.
+  byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
+  writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X01);
+
+  // Delay a bit and make sure it has had plenty of time to reset
+  delay(5);
+
+  //set the gyroscope control register to work at 104 Hz, 2000 dps, and full-scale at 125 dps
   writeRegister(LSM6DS3_CTRL2_G, 0x4C);
 
-  // Set the Accelerometer control register to work at 104 Hz, 4G,and in bypass mode and enable ODR/4
+  // Set the Accelerometer control register to work at 104 Hz, 4G, and anti-aliasing filter at 100Hz
   // low pass filter(check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
-
-  // set gyroscope power mode to high performance and bandwidth to 16 MHz
-  writeRegister(LSM6DS3_CTRL7_G, 0x00);
-
-  // Set the ODR config register to ODR/4
-  writeRegister(LSM6DS3_CTRL8_XL, 0x09);
 
   return 1;
 }
@@ -108,6 +128,55 @@ void LSM6DS3Class::end()
     writeRegister(LSM6DS3_CTRL1_XL, 0x00);
     _wire->end();
   }
+}
+
+bool LSM6DS3Class::calibrate(int ms) {
+  // Let things have a chance to settle down or we might 
+  // get some odd values that throw off our averages
+  delay(ms);
+  
+  // Measure the average drift over the given ms
+  int samples = 0;
+  float calSumX = 0.0;
+  float calSumY = 0.0;
+  float calSumZ = 0.0;
+  int start = millis();
+  float gyroXRaw, gyroYRaw, gyroZRaw;
+
+  while (millis() < start + ms) { 
+    if (gyroscopeAvailable()) {
+      readGyroscope(gyroXRaw, gyroYRaw, gyroZRaw);
+
+      calSumX += gyroXRaw;
+      calSumY += gyroYRaw;
+      calSumZ += gyroZRaw;
+
+      samples++;
+    }
+  }
+
+  if (samples == 0) {
+    Serial.println("Not enough samples to calibrate IMU!");
+    return false;
+  }
+
+  _gyroXOffset = calSumX / samples;
+  _gyroYOffset = calSumY / samples;
+  _gyroZOffset = calSumZ / samples;
+
+  return true;
+}
+
+void LSM6DS3Class::getGyroOffsets(float& x, float& y, float& z) {
+  x = _gyroXOffset;
+  y = _gyroYOffset;
+  z = _gyroZOffset;
+}
+
+void LSM6DS3Class::setGyroOffsets(float x, float y, float z) {
+  _gyroXOffset = x;
+  _gyroYOffset = y;
+  _gyroZOffset = z;
 }
 
 int LSM6DS3Class::readAcceleration(float& x, float& y, float& z)
@@ -143,6 +212,10 @@ float LSM6DS3Class::accelerationSampleRate()
   return 104.0F;
 }
 
+void LSM6DS3Class::setAccelerationFilter(LSM6DS3::AccelerometerFilter filter) {
+  writeRegister(LSM6DS3_CTRL8_XL, filter);
+}
+
 int LSM6DS3Class::readGyroscope(float& x, float& y, float& z)
 {
   int16_t data[3];
@@ -155,9 +228,9 @@ int LSM6DS3Class::readGyroscope(float& x, float& y, float& z)
     return 0;
   }
 
-  x = data[0] * 2000.0 / 32768.0;
-  y = data[1] * 2000.0 / 32768.0;
-  z = data[2] * 2000.0 / 32768.0;
+  x = data[0] * 2000.0 / 32768.0 - _gyroXOffset;
+  y = data[1] * 2000.0 / 32768.0 - _gyroYOffset;
+  z = data[2] * 2000.0 / 32768.0 - _gyroZOffset;
 
   return 1;
 }
@@ -174,6 +247,130 @@ int LSM6DS3Class::gyroscopeAvailable()
 float LSM6DS3Class::gyroscopeSampleRate()
 {
   return 104.0F;
+}
+
+void LSM6DS3Class::enableFifo() {
+  // Enable Block Data Update (BDU) to make sure the output registers aren't updated until both MSByte and LSByte are read
+  // Keep whatever is already in that register, but make sure the one bit we care about is set to 1
+  byte currentCTRL3 = readRegister(LSM6DS3_CTRL3_C);
+  writeRegister(LSM6DS3_CTRL3_C, currentCTRL3 | 0X40);
+
+  // When number of bytes in FIFO is >= 0, raise watermark flag (bits 7:0)
+  // No need to modify anything in LSM6DS3_FIFO_CTRL1 since this is default
+
+  // Disable pedometer step counter and timestamp as 4th FIFO dataset,
+  // Enable write to FIFO on XL/G ready
+  // When number of bytes in FIFO is >= 0, raise watermark flag (bits 11:8)
+  // No need to modify anything in LSM6DS3_FIFO_CTRL2 since this is default
+
+  // Don't use any decimation for either XL or G and enable XL and G to write to FIFO
+  writeRegister(LSM6DS3_FIFO_CTRL3, 0X09);
+
+  // No decimation for 3rd or 4th dataset and don't put them in the FIFO
+  // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
+
+  // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and
+  // to overwrite old samples when full (this raises the overrun flag in LSM6DS3_FIFO_STATUS2)
+  // The FIFO ODR must be set <= both the XL and G ODRs
+  writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
+
+  _fifoEnabled = true;
+}
+
+void LSM6DS3Class::disableFifo() {
+  // configure the FIFO to bypass mode
+  writeRegister(LSM6DS3_FIFO_CTRL5, 0x00);
+  _fifoEnabled = false;
+}
+
+void LSM6DS3Class::resetFifo() {
+  disableFifo();
+  enableFifo();
+}
+
+int LSM6DS3Class::fifoLength() {
+  if (!_fifoEnabled) {
+    return -1;
+  }
+
+  int16_t data[1];
+  if (readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data))) {
+    // Mask the data we want
+    int unreadSamples = data[0] & 0XFFF;
+    return unreadSamples / FIFO_SAMPLE_WIDTH;
+  }
+  return -1;
+}
+
+size_t LSM6DS3Class::fifoRead(float samples[][FIFO_SAMPLE_WIDTH], size_t length) {
+  if (!_fifoEnabled) {
+    return -1;
+  }
+
+  size_t bytesRead = 0;
+  int16_t data[1];
+  int fifoLength = IMU.fifoLength();
+  if (fifoLength < 1) {
+    // There isn't enough data to read to fill at least one sample in our samples array
+    return bytesRead;
+  }
+
+  for (int j = 0; j < length && j < fifoLength; ++j) {
+    // Read entire set of accelerometer and gyroscope readings (XYZ for both)
+    // We have to read it one at a time because we can only read the data out 
+    // from the one register. Probably need to make a new method or modify
+    // readRegisters() so that it can read the same register multiple times
+    for (int i = 0; i < FIFO_SAMPLE_WIDTH; ++i) {
+      // Find what position we're in for the current sample
+      // We're going to have a bad day if we're ever out of sync
+      int patternPosition = fifoWordOfRecursivePattern();
+      readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
+
+      // Convert the value and apply gryo offsets
+      if (patternPosition == 0){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroXOffset;
+      }
+      else if (patternPosition == 1){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroYOffset;
+      }
+      else if (patternPosition == 2){
+        samples[j][i] = data[0] * 2000.0 / 32768.0;
+        samples[j][i] -= _gyroZOffset;
+      }
+      else {
+        samples[j][i] = data[0] * 4.0 / 32768.0;
+      }
+    }
+    bytesRead++;
+  }
+
+  return bytesRead;
+}
+
+bool LSM6DS3Class::fifoOverrun() {
+  if (!_fifoEnabled) {
+    return true;
+  }
+
+  int16_t data[1];
+  readRegisters(LSM6DS3_FIFO_STATUS1, (uint8_t*)data, sizeof(data));
+  // check if the fifo has overran
+  return data[0] & 0X4000;
+}
+
+int LSM6DS3Class::fifoWordOfRecursivePattern() {
+  if (!_fifoEnabled) {
+    return -1;
+  }
+
+  int16_t data[1];
+  if (readRegisters(LSM6DS3_FIFO_STATUS3, (uint8_t*)data, sizeof(data)) == 1) {
+    return data[0] & 0X3FF;
+  } else {
+    return -1;
+  }
 }
 
 int LSM6DS3Class::readRegister(uint8_t address)
@@ -228,6 +425,7 @@ int LSM6DS3Class::writeRegister(uint8_t address, uint8_t value)
     _wire->beginTransmission(_slaveAddress);
     _wire->write(address);
     _wire->write(value);
+
     if (_wire->endTransmission() != 0) {
       return 0;
     }
