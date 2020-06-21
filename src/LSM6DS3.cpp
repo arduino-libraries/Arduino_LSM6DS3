@@ -270,7 +270,7 @@ void LSM6DS3Class::enableFifo() {
   // No need to modify anything in LSM6DS3_FIFO_CTRL4 since this is default
 
   // Set FIFO ODR to 104Hz, configure the FIFO in continuous mode and
-  // to overwrite old samples when full (this raises the overun flag in LSM6DS3_FIFO_STATUS2)
+  // to overwrite old samples when full (this raises the overrun flag in LSM6DS3_FIFO_STATUS2)
   // The FIFO ODR must be set <= both the XL and G ODRs
   writeRegister(LSM6DS3_FIFO_CTRL5, 0x26);
 
@@ -321,7 +321,7 @@ size_t LSM6DS3Class::fifoRead(float samples[][FIFO_SAMPLE_WIDTH], size_t length)
     // from the one register. Probably need to make a new method or modify
     // readRegisters() so that it can read the same register multiple times
     for (int i = 0; i < FIFO_SAMPLE_WIDTH; ++i) {
-      // Find what poisition we're in for the current sample
+      // Find what position we're in for the current sample
       // We're going to have a bad day if we're ever out of sync
       int patternPosition = fifoWordOfRecursivePattern();
       readRegisters(LSM6DS3_FIFO_DATA_OUT_L, (uint8_t*)data, sizeof(data));
