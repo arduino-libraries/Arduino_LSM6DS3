@@ -20,6 +20,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include "LSM6DS3_Types.h"
 
 #define FIFO_SAMPLE_WIDTH 6
 
@@ -42,6 +43,7 @@ class LSM6DS3Class {
     virtual int readAcceleration(float& x, float& y, float& z); // Results are in G (earth gravity).
     virtual float accelerationSampleRate(); // Sampling rate of the sensor.
     virtual int accelerationAvailable(); // Check for available data from accerometer
+    virtual void setAccelerationFilter(LSM6DS3::AccelerometerFilter filter);
 
     // Gyroscope
     virtual int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.

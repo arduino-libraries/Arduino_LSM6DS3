@@ -212,6 +212,10 @@ float LSM6DS3Class::accelerationSampleRate()
   return 104.0F;
 }
 
+void LSM6DS3Class::setAccelerationFilter(LSM6DS3::AccelerometerFilter filter) {
+  writeRegister(LSM6DS3_CTRL8_XL, filter);
+}
+
 int LSM6DS3Class::readGyroscope(float& x, float& y, float& z)
 {
   int16_t data[3];
