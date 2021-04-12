@@ -91,9 +91,6 @@ int LSM6DS3Class::begin()
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
   writeRegister(LSM6DS3_CTRL7_G, 0x00);
 
-  // Set the ODR config register to ODR/4
-  writeRegister(LSM6DS3_CTRL8_XL, 0x09);
-
   return 1;
 }
 
