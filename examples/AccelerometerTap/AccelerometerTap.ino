@@ -3,7 +3,6 @@
 
   this code is to detect tap
   using IMU.accelerationAvailable()
-
 */
 
 #include <Arduino_LSM6DS3.h>
