@@ -32,12 +32,12 @@ if (!IMU.begin()) {
 #### See also
 
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `end()`
 
@@ -74,12 +74,12 @@ IMU.end();
 #### See also
 
 * [begin()](#begin)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `readAcceleration()`
 
@@ -121,11 +121,11 @@ if (IMU.accelerationAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `readGyroscope()`
 
@@ -167,11 +167,11 @@ if (IMU.gyroscopeAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `accelerationAvailable()`
 
@@ -211,11 +211,11 @@ if (IMU.accelerationAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `gyroscopeAvailable()`
 
@@ -255,11 +255,11 @@ if (IMU.gyroscopeAvailable()) {
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `accelerationSampleRate()`
 
@@ -294,11 +294,11 @@ Serial.println("X\tY\tZ");
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [gyroscopeSampleRate()](#gyroscopeSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [gyroscopeSampleRate()](#gyroscopesamplerate)
 
 ### `gyroscopeSampleRate()`
 
@@ -333,8 +333,8 @@ Serial.println("X\tY\tZ");
 
 * [begin()](#begin)
 * [end()](#end)
-* [readAcceleration()](#readAcceleration)
-* [readGyroscope()](#readGyroscope)
-* [accelerationAvailable()](#accelerationAvailable)
-* [gyroscopeAvailable()](#gyroscopeAvailable)
-* [accelerationSampleRate()](#accelerationSampleRate)
+* [readAcceleration()](#readacceleration)
+* [readGyroscope()](#readgyroscope)
+* [accelerationAvailable()](#accelerationavailable)
+* [gyroscopeAvailable()](#gyroscopeavailable)
+* [accelerationSampleRate()](#accelerationsamplerate)
