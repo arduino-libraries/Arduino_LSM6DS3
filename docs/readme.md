@@ -1,7 +1,7 @@
 # ArduinoLSM6DS3 library
 
 
-The ArduinoLSM6DS3 library allows you to use the inertial measurement unit (IMU) available on the Arduino&reg; Nano 33 IoT board and the Arduino&reg; UNO WiFi Rev 2 board. The IMU is a LSM6DS3, it has a 3-axis accelerometer and a 3-axis gyroscope. The IMU is connected through I2C on the Nano 33 IoT board's microcontroller and through SPI on the UNO WiFi Rev. 2 board's microcontroller. The values returned are signed floats.
+The ArduinoLSM6DS3 library allows you to use the inertial measurement unit (IMU) available on the Arduino&reg; Nano 33 IoT board and the Arduino&reg; UNO WiFi Rev 2 board. The IMU is a [LSM6DS3](https://www.st.com/resource/en/datasheet/lsm6ds3.pdf), it has a 3-axis accelerometer and a 3-axis gyroscope. The IMU is connected through I2C on the Nano 33 IoT board's microcontroller and through SPI on the UNO WiFi Rev. 2 board's microcontroller. The values returned are signed floats.
 
 To use this library:
 
