@@ -69,7 +69,7 @@ class LSM6DS3Class {
     virtual int gyroscopeAvailable(); // Check for available data from gyroscope
 
 
-  private:
+  protected:
     int readRegister(uint8_t address);
     int readRegisters(uint8_t address, uint8_t* data, size_t length);
     int writeRegister(uint8_t address, uint8_t value);
