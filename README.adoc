@@ -9,4 +9,4 @@ image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/
 
 Allows you to read the accelerometer and gyroscope values from the LSM6DS3 IMU on your Arduino Nano 33 IoT or Arduino Uno WiFi Rev2 boards.
 
-For more information about this library please visit us at https://www.arduino.cc/en/Reference/{repository-name}
+For more information about this library please visit us at https://www.arduino.cc/reference/en/libraries/arduino_lsm6ds3/
