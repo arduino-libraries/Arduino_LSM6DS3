@@ -49,7 +49,7 @@ int LSM6DS3Class::begin()
     _wire->begin();
   }
 
-  if (readRegister(LSM6DS3_WHO_AM_I_REG) != 0x69) {
+  if (!(readRegister(LSM6DS3_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DS3_WHO_AM_I_REG) == 0x69)) {
     end();
     return 0;
   }
