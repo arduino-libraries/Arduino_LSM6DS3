@@ -207,9 +207,10 @@ int LSM6DS3Class::writeRegister(uint8_t address, uint8_t value)
   }
   return 1;
 }
-
-#ifdef ARDUINO_AVR_UNO_WIFI_REV2
-LSM6DS3Class IMU(SPI, SPIIMU_SS, SPIIMU_INT);
-#else
-LSM6DS3Class IMU(Wire, LSM6DS3_ADDRESS);
+#ifdef IMU_INCLUDED
+  #ifdef ARDUINO_AVR_UNO_WIFI_REV2
+    LSM6DS3Class IMU(SPI, SPIIMU_SS, SPIIMU_INT);
+  #else
+    LSM6DS3Class IMU(Wire, LSM6DS3_ADDRESS);
+  #endif
 #endif

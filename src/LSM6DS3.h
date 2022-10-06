@@ -20,6 +20,9 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <SPI.h>
+#include "ArduinoIMU.h"
+
+#define IMU_INCLUDED !HAS_INCLUDE_IMU
 
 #define LSM6DS3_ADDRESS            0x6A
 
@@ -84,5 +87,6 @@ class LSM6DS3Class {
 
     SPISettings _spiSettings;
 };
-
-extern LSM6DS3Class IMU;
+#ifdef IMU_INCLUDED
+  extern LSM6DS3Class IMU;
+#endif
