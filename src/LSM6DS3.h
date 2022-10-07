@@ -21,12 +21,6 @@
 #include <Wire.h>
 #include <SPI.h>
 
-#if defined __has_include
-  #if __has_include("Arduino_LSM6DSOX.h") || __has_include("Arduino_LSM9DS1.h") || __has_include("BoschSensorClass.h")
-  #define LSM6DS3_SHOULDNT_DECLARE_IMU_OBJECT
-  #endif
-#endif
-
 #define LSM6DS3_ADDRESS            0x6A
 
 #define LSM6DS3_WHO_AM_I_REG       0X0F
@@ -90,6 +84,7 @@ class LSM6DS3Class {
 
     SPISettings _spiSettings;
 };
-#ifndef LSM6DS3_SHOULDNT_DECLARE_IMU_OBJECT
-  extern LSM6DS3Class IMU;
-#endif
+
+extern LSM6DS3Class IMU_LSM6DS3;
+#undef IMU
+#define IMU IMU_LSM6DS3
