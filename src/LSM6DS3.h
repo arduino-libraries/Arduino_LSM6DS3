@@ -85,4 +85,6 @@ class LSM6DS3Class {
     SPISettings _spiSettings;
 };
 
-extern LSM6DS3Class IMU;
+extern LSM6DS3Class IMU_LSM6DS3;
+#undef IMU
+#define IMU IMU_LSM6DS3
