@@ -19,35 +19,6 @@
 
 #include "LSM6DS3.h"
 
-#define LSM6DS3_ADDRESS            0x6A
-
-#define LSM6DS3_WHO_AM_I_REG       0X0F
-#define LSM6DS3_CTRL1_XL           0X10
-#define LSM6DS3_CTRL2_G            0X11
-
-#define LSM6DS3_STATUS_REG         0X1E
-
-#define LSM6DS3_CTRL6_C            0X15
-#define LSM6DS3_CTRL7_G            0X16
-#define LSM6DS3_CTRL8_XL           0X17
-
-#define LSM6DS3_OUT_TEMP_L         0X20
-
-#define LSM6DS3_OUTX_L_G           0X22
-#define LSM6DS3_OUTX_H_G           0X23
-#define LSM6DS3_OUTY_L_G           0X24
-#define LSM6DS3_OUTY_H_G           0X25
-#define LSM6DS3_OUTZ_L_G           0X26
-#define LSM6DS3_OUTZ_H_G           0X27
-
-#define LSM6DS3_OUTX_L_XL          0X28
-#define LSM6DS3_OUTX_H_XL          0X29
-#define LSM6DS3_OUTY_L_XL          0X2A
-#define LSM6DS3_OUTY_H_XL          0X2B
-#define LSM6DS3_OUTZ_L_XL          0X2C
-#define LSM6DS3_OUTZ_H_XL          0X2D
-
-
 LSM6DS3Class::LSM6DS3Class(TwoWire& wire, uint8_t slaveAddress) :
   _wire(&wire),
   _spi(NULL),
@@ -78,7 +49,7 @@ int LSM6DS3Class::begin()
     _wire->begin();
   }
 
-  if (readRegister(LSM6DS3_WHO_AM_I_REG) != 0x69) {
+  if (!(readRegister(LSM6DS3_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DS3_WHO_AM_I_REG) == 0x69)) {
     end();
     return 0;
   }
@@ -86,8 +57,8 @@ int LSM6DS3Class::begin()
   //set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
   writeRegister(LSM6DS3_CTRL2_G, 0x4C);
 
-  // Set the Accelerometer control register to work at 104 Hz, 4G,and in bypass mode and enable ODR/4
-  // low pass filter(check figure9 of LSM6DS3's datasheet)
+  // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
+  // low pass filter (check figure9 of LSM6DS3's datasheet)
   writeRegister(LSM6DS3_CTRL1_XL, 0x4A);
 
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
@@ -267,7 +238,7 @@ int LSM6DS3Class::writeRegister(uint8_t address, uint8_t value)
 }
 
 #ifdef ARDUINO_AVR_UNO_WIFI_REV2
-LSM6DS3Class IMU(SPI, SPIIMU_SS, SPIIMU_INT);
+  LSM6DS3Class IMU(SPI, SPIIMU_SS, SPIIMU_INT);
 #else
-LSM6DS3Class IMU(Wire, LSM6DS3_ADDRESS);
+  LSM6DS3Class IMU_LSM6DS3(Wire, LSM6DS3_ADDRESS);
 #endif

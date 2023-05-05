@@ -17,8 +17,8 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef  _ARUDINO_LSM6DS3_H_
-#define  _ARUDINO_LSM6DS3_H_
+#ifndef  _ARDUINO_LSM6DS3_H_
+#define  _ARDUINO_LSM6DS3_H_
 
 #include "LSM6DS3.h"
 
