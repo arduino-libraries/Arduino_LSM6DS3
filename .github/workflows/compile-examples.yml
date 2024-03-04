@@ -34,9 +34,11 @@ jobs:
           - fqbn: arduino:megaavr:uno2018
             platforms: |
               - name: arduino:megaavr
+            artifact-name-suffix: arduino-megaavr-uno2018
           - fqbn: arduino:samd:nano_33_iot
             platforms: |
               - name: arduino:samd
+            artifact-name-suffix: arduino-samd-nano_33_iot
 
     steps:
       - name: Checkout repository
@@ -63,4 +65,4 @@ jobs:
         with:
           if-no-files-found: error
           path: ${{ env.SKETCHES_REPORTS_PATH }}
-          name: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: sketches-report-${{ matrix.board.artifact-name-suffix }}
