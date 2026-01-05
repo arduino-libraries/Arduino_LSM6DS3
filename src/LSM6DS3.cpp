@@ -79,7 +79,7 @@ void LSM6DS3Class::end()
   } else {
     writeRegister(LSM6DS3_CTRL2_G, 0x00);
     writeRegister(LSM6DS3_CTRL1_XL, 0x00);
-    _wire->end();
+    _wire->endTransmission();
   }
 }
 
