@@ -1,5 +1,8 @@
 Arduino_LSM6DSM ?.?.? - ????.??.??
 
+* Fix readGyroscope() scaling: use the datasheet sensitivity of 70 mdps/LSB for
+  the FS = +/-2000 dps setting instead of 2000/32768. Reported angular rates
+  were ~12.8% low.
 * Add functions to use temperature sensor.
 
 Arduino_LSM6DSM 1.0.0 - 2019.07.19
