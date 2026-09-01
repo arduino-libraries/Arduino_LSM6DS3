@@ -128,9 +128,14 @@ int LSM6DS3Class::readGyroscope(float& x, float& y, float& z)
     return 0;
   }
 
-  x = data[0] * 2000.0 / 32768.0;
-  y = data[1] * 2000.0 / 32768.0;
-  z = data[2] * 2000.0 / 32768.0;
+  // Scale the raw counts with the datasheet sensitivity (Table 3, G_So) for
+  // the FS = +/-2000 dps setting selected in begin(): 70 mdps/LSB, i.e.
+  // 70/1000 dps per count. The sensitivity is the exact figure to scale by;
+  // the full-scale labels are rounded nominal values, and 70 mdps/LSB puts
+  // the true full scale at +/-2293.8 dps.
+  x = data[0] * 70.0 / 1000.0;
+  y = data[1] * 70.0 / 1000.0;
+  z = data[2] * 70.0 / 1000.0;
 
   return 1;
 }
